@@ -137,6 +137,31 @@
       font-family: monospace;
     }
 
+    .card-schedule {
+      font-size: .72rem;
+      font-weight: 600;
+      color: #fff;
+      background: #2563eb;
+      border-radius: 5px;
+      padding: .18rem .55rem;
+      display: inline-block;
+      letter-spacing: .01em;
+    }
+
+    .card.inactive {
+      opacity: .5;
+      filter: grayscale(70%);
+    }
+    .card.inactive .card-schedule-none {
+      font-size: .72rem;
+      font-weight: 600;
+      color: #a1a1aa;
+      background: #e4e4e7;
+      border-radius: 5px;
+      padding: .18rem .55rem;
+      display: inline-block;
+    }
+
     /* progress bar */
     .progress-wrap {
       height: 4px;
@@ -248,6 +273,37 @@ const LABELS = {
   "vypln_po_zavreni.jpg":                 "Výplň — po zavření (22–23 h)",
 };
 
+// ─────────────────────────────────────────────
+//  Časové sloty z playlistu (index.html)
+//  weekday = Po–Pá, weekend = So–Ne
+// ─────────────────────────────────────────────
+const SCHEDULE_TIMES = {
+  "vypln_pred_otevrenim.jpg":             { weekday: "08:00–09:00", weekend: "08:00–09:00" },
+  "snidane.jpg":                          { weekday: "09:00–11:00", weekend: null           },
+  "snidane_vikend.jpg":                   { weekday: null,          weekend: "09:00–15:00"  },
+  "vypln_mezi_snidani_a_obedem.jpg":      { weekday: "11:00–11:30", weekend: null           },
+  "obed_tydne.jpg":                       { weekday: "11:30–15:00", weekend: null           },
+  "vypln_mezi_obedem_a_veceri.jpg":       { weekday: "15:00–16:00", weekend: "15:00–16:00" },
+  "vecere.jpg":                           { weekday: "16:00–21:00", weekend: "16:00–21:00" },
+  "napoje_a_oteviraci_doba_kuchyne.jpg":  { weekday: "21:00–22:00", weekend: "21:00–22:00" },
+  "vypln_po_zavreni.jpg":                 { weekday: "22:00–23:00", weekend: "22:00–23:00" },
+};
+
+// Pořadí karet dle playlistu (ostatní jdou na konec jako šedé)
+const PLAYLIST_ORDER = Object.keys(SCHEDULE_TIMES);
+
+function formatSchedule(filename) {
+  const s = SCHEDULE_TIMES[filename];
+  if (!s) return null;
+  if (s.weekday && s.weekend) {
+    if (s.weekday === s.weekend) return `Po\u2013Ne \u00b7 ${s.weekday}`;
+    return `Po\u2013P\u00e1 \u00b7 ${s.weekday}\u2002|\u2002So\u2013Ne \u00b7 ${s.weekend}`;
+  }
+  if (s.weekday) return `Po\u2013P\u00e1 \u00b7 ${s.weekday}`;
+  if (s.weekend) return `So\u2013Ne \u00b7 ${s.weekend}`;
+  return null;
+}
+
 const TOKEN_KEY = "menu_github_pat";
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
@@ -358,11 +414,10 @@ async function loadImages() {
   const items = await res.json();
   const jpgs  = items.filter((f) => /\.(jpg|jpeg)$/i.test(f.name));
 
-  // Sort: known files first (in LABELS order), then the rest alphabetically
-  const order = Object.keys(LABELS);
+  // Sort: playlist files first (in schedule order), inactive files last alphabetically
   jpgs.sort((a, b) => {
-    const ai = order.indexOf(a.name);
-    const bi = order.indexOf(b.name);
+    const ai = PLAYLIST_ORDER.indexOf(a.name);
+    const bi = PLAYLIST_ORDER.indexOf(b.name);
     if (ai !== -1 && bi !== -1) return ai - bi;
     if (ai !== -1) return -1;
     if (bi !== -1) return  1;
@@ -385,8 +440,14 @@ function renderGrid(files) {
     // download_url is a direct CDN link — fast for thumbnails
     const thumbSrc = file.download_url + "?t=" + Date.now();
 
+    const scheduleText = formatSchedule(file.name);
+    const inPlaylist   = scheduleText !== null;
+    const scheduleBadge = inPlaylist
+      ? `<div class="card-schedule">${scheduleText}</div>`
+      : `<div class="card-schedule-none">Není v playlistu</div>`;
+
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = inPlaylist ? "card" : "card inactive";
     card.dataset.filename = file.name;
     card.dataset.sha      = file.sha;
 
@@ -396,6 +457,7 @@ function renderGrid(files) {
       </div>
       <div class="card-body">
         <div class="card-label">${label}</div>
+        ${scheduleBadge}
         <div class="card-filename">${file.name}</div>
         <div class="progress-wrap"><div class="progress-bar"></div></div>
         <div class="upload-wrap">
