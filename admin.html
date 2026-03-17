@@ -8,53 +8,62 @@
     *, *::before, *::after { box-sizing: border-box; }
 
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f4f4f5;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #111317;
       margin: 0;
-      padding: 1rem;
-      color: #18181b;
+      padding: 2rem 1.5rem;
+      color: #c9cdd4;
+      min-height: 100vh;
     }
 
     /* ── Login ── */
     #login-screen {
       max-width: 400px;
-      margin: 5rem auto;
-      background: #fff;
-      border-radius: 14px;
-      padding: 2rem;
-      box-shadow: 0 2px 16px rgba(0,0,0,.09);
+      margin: 6rem auto;
+      background: #1a1d23;
+      border: 1px solid #2a2d35;
+      border-radius: 12px;
+      padding: 2.25rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
     }
     #login-screen h1 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
       margin: 0 0 .4rem;
+      color: #f1f3f6;
     }
     #login-screen p {
-      font-size: .85rem;
-      color: #71717a;
-      margin: 0 0 1.25rem;
+      font-size: .83rem;
+      color: #7a8190;
+      margin: 0 0 1.75rem;
+      line-height: 1.6;
     }
-    #login-screen a { color: #2563eb; }
+    #login-screen a { color: #4f8ef7; text-decoration: none; }
+    #login-screen a:hover { text-decoration: underline; }
 
-    .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .85rem; }
-    .field label { font-size: .8rem; font-weight: 600; color: #52525b; }
+    .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
+    .field label { font-size: .75rem; font-weight: 600; color: #7a8190; }
     .field input {
-      padding: .6rem .75rem;
-      border: 1px solid #d4d4d8;
-      border-radius: 8px;
-      font-size: .95rem;
+      padding: .65rem .85rem;
+      border: 1px solid #2a2d35;
+      border-radius: 7px;
+      background: #111317;
+      color: #f1f3f6;
+      font-size: .9rem;
       width: 100%;
       transition: border-color .15s, box-shadow .15s;
     }
+    .field input::placeholder { color: #3d4250; }
     .field input:focus {
       outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+      border-color: #4f8ef7;
+      box-shadow: 0 0 0 3px rgba(79,142,247,.12);
     }
 
     .error-msg {
-      font-size: .82rem;
-      color: #dc2626;
-      margin: -.4rem 0 .7rem;
+      font-size: .8rem;
+      color: #f47070;
+      margin: -.5rem 0 .75rem;
       display: none;
     }
 
@@ -63,54 +72,66 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: .4rem;
-      padding: .55rem 1.1rem;
-      border: none;
-      border-radius: 8px;
-      font-size: .875rem;
-      font-weight: 500;
+      gap: .45rem;
+      padding: .6rem 1.25rem;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      font-size: .85rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: background .15s, opacity .15s;
+      transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
       white-space: nowrap;
     }
-    .btn:disabled { opacity: .45; cursor: not-allowed; }
-    .btn-primary  { background: #2563eb; color: #fff; }
-    .btn-primary:hover:not(:disabled)  { background: #1d4ed8; }
-    .btn-ghost    { background: #e4e4e7; color: #3f3f46; }
-    .btn-ghost:hover:not(:disabled)    { background: #d4d4d8; }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-primary  { background: #4f8ef7; color: #fff; border-color: #4f8ef7; }
+    .btn-primary:hover:not(:disabled)  { background: #3b7ef5; border-color: #3b7ef5; box-shadow: 0 0 0 3px rgba(79,142,247,.18); }
+    .btn-ghost    { background: transparent; color: #9aa0ad; border-color: #2a2d35; }
+    .btn-ghost:hover:not(:disabled)    { color: #f1f3f6; border-color: #4a4f5e; background: #1f2229; }
     .btn-full { width: 100%; }
 
     /* ── App layout ── */
-    #app { max-width: 860px; margin: 0 auto; display: none; }
+    #app { max-width: 960px; margin: 0 auto; display: none; }
 
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid #1f2229;
       gap: 1rem;
     }
-    .topbar h1 { font-size: 1.15rem; margin: 0; }
+    .topbar h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0;
+      color: #f1f3f6;
+    }
 
     /* ── Cards grid ── */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: .85rem;
     }
 
     .card {
-      background: #fff;
-      border-radius: 12px;
+      background: #1a1d23;
+      border: 1px solid #2a2d35;
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 1px 6px rgba(0,0,0,.07);
       display: flex;
       flex-direction: column;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .card:hover {
+      border-color: #3a3f50;
+      box-shadow: 0 4px 20px rgba(0,0,0,.3);
     }
 
     .card-thumb {
       aspect-ratio: 16/9;
-      background: #18181b;
+      background: #0d0f14;
       overflow: hidden;
     }
     .card-thumb img {
@@ -121,58 +142,63 @@
     }
 
     .card-body {
-      padding: .85rem;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
       gap: .55rem;
       flex: 1;
     }
     .card-label {
-      font-size: .9rem;
+      font-size: .875rem;
       font-weight: 600;
+      color: #e8eaf0;
+      line-height: 1.35;
     }
-    .card-filename {
-      font-size: .72rem;
-      color: #a1a1aa;
-      font-family: monospace;
-    }
-
     .card-schedule {
-      font-size: .72rem;
+      font-size: .73rem;
       font-weight: 600;
-      color: #fff;
-      background: #2563eb;
+      color: #4f8ef7;
+      background: rgba(79,142,247,.1);
+      border: 1px solid rgba(79,142,247,.2);
       border-radius: 5px;
       padding: .18rem .55rem;
       display: inline-block;
-      letter-spacing: .01em;
+      width: fit-content;
+    }
+    .card-filename {
+      font-size: .7rem;
+      color: #4a4f5e;
+      font-family: monospace;
+      margin-top: auto;
+      padding-top: .25rem;
     }
 
     .card.inactive {
-      opacity: .5;
-      filter: grayscale(70%);
+      opacity: .45;
     }
     .card.inactive .card-schedule-none {
-      font-size: .72rem;
+      font-size: .73rem;
       font-weight: 600;
-      color: #a1a1aa;
-      background: #e4e4e7;
+      color: #4a4f5e;
+      background: #1f2229;
+      border: 1px solid #2a2d35;
       border-radius: 5px;
       padding: .18rem .55rem;
       display: inline-block;
+      width: fit-content;
     }
 
     /* progress bar */
     .progress-wrap {
-      height: 4px;
-      background: #e4e4e7;
+      height: 3px;
+      background: #1f2229;
       border-radius: 2px;
       overflow: hidden;
       display: none;
     }
     .progress-bar {
       height: 100%;
-      background: #2563eb;
+      background: #4f8ef7;
       width: 0;
       transition: width .2s;
     }
@@ -191,29 +217,29 @@
     /* ── Toast ── */
     #toast {
       position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      padding: .75rem 1.2rem;
-      border-radius: 10px;
-      font-size: .875rem;
+      bottom: 1.75rem;
+      right: 1.75rem;
+      padding: .8rem 1.2rem;
+      border-radius: 9px;
+      font-size: .83rem;
       font-weight: 500;
-      color: #fff;
-      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      color: #f1f3f6;
       opacity: 0;
-      transform: translateY(.75rem);
-      transition: opacity .25s, transform .25s;
+      transform: translateY(.6rem);
+      transition: opacity .22s, transform .22s;
       pointer-events: none;
       z-index: 9999;
       max-width: 320px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
     }
     #toast.show { opacity: 1; transform: translateY(0); }
-    #toast.ok  { background: #16a34a; }
-    #toast.err { background: #dc2626; }
+    #toast.ok  { background: #1a1d23; border: 1px solid #2a2d35; border-top: 2px solid #4f8ef7; }
+    #toast.err { background: #1a1d23; border: 1px solid #2a2d35; border-top: 2px solid #f47070; }
 
     #status-bar {
-      font-size: .8rem;
-      color: #71717a;
-      margin-bottom: 1rem;
+      font-size: .78rem;
+      color: #4a4f5e;
+      margin-bottom: 1.5rem;
     }
   </style>
 </head>
@@ -221,10 +247,9 @@
 
 <!-- ══════════════ LOGIN ══════════════ -->
 <div id="login-screen">
-  <h1>Správa menu obrázků</h1>
+  <h1>Správa menu obraovky Vnitroblock bar</h1>
   <p>
-    Zadej svůj GitHub Personal Access Token (PAT) s oprávněním <code>repo</code>.<br>
-    Token se uloží pouze do prohlížeče a nikam neodesílá.
+    Zadej Personal Access Token (PAT) s oprávněním <code>repo</code>.
     <a href="https://github.com/settings/tokens/new?scopes=repo&description=Menu+admin" target="_blank" rel="noopener">Vytvořit token →</a>
   </p>
   <div class="field">
@@ -238,7 +263,7 @@
 <!-- ══════════════ APP ══════════════ -->
 <div id="app">
   <div class="topbar">
-    <h1>Správa menu obrázků</h1>
+    <h1>Správa menu obraovky Vnitroblock bar</h1>
     <button class="btn btn-ghost" id="logout-btn">Odhlásit</button>
   </div>
   <p id="status-bar"></p>
