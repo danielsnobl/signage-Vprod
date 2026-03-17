@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Menu Display</title>
+
+  <!-- Pomůže proti některým cache problémům v prohlížečích -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <style>
+    html, body { height: 100%; margin: 0; background: #000; }
+    .wrap { height: 100%; display: grid; place-items: center; }
+    img {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain; /* změň na cover, pokud chceš ořez přes celou TV */
+      background: #000;
+    }
+    /* jemný fade při přepnutí */
+    .fade { transition: opacity 350ms ease; opacity: 1; }
+    .fade.out { opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img id="screen" class="fade" alt="Menu" />
+  </div>
+
+<script>
+(() => {
+  // ======== DŮLEŽITÉ: změň 1× týdně (kvůli cache na TV) ========
+  // Např. "2026w07", "2026-02-16", cokoliv
+  const VERSION = "2026w1803";
+
+  // ======== Nastavení rotace v rámci bloku (když máš víc JPG) ========
+  const ROTATE_EVERY_MS = 15000; // 15s
+
+  // ======== Auto-refresh stránky (TV prohlížeče se občas unaví) ========
+  const HARD_REFRESH_EVERY_MS = 4 * 60 * 60 * 1000; // 4 hodiny
+
+  // ======== Cesta k obrázkům ========
+  const ASSET_BASE = "./assets/";
+
+  // Pomocná funkce: vytvoří URL s cache-bust parametrem
+  function imgUrl(filename) {
+    const sep = filename.includes("?") ? "&" : "?";
+    return ASSET_BASE + filename + sep + "v=" + encodeURIComponent(VERSION);
+  }
+
+  // ======== Tvoje playlisty (doplň soubory) ========
+  // Do každého bloku můžeš dát 1 nebo více JPG (budou se střídat).
+  const PLAYLISTS = {
+    // PO–PÁ
+    wk_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8–9
+    wk_breakfast: ["snidane.jpg"],                               // 9–11
+    wk_between1:  ["vypln_mezi_snidani_a_obedem.jpg"],           // 11–11:30
+    wk_lunch:     ["obed_tydne.jpg"],                            // 11:30–15 (týdně měníš)
+    wk_between2:  ["vypln_mezi_obedem_a_veceri.jpg"],            // 15–16
+    wk_dinner:    ["vecere.jpg"],                                // 16–21
+    wk_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21–22
+    wk_postclose: ["vypln_po_zavreni.jpg"],                      // 22–23
+
+    // SO–NE
+    we_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8–9
+    we_breakfast: ["snidane_vikend.jpg"],                        // 9–15
+    we_between:   ["vypln_mezi_obedem_a_veceri.jpg"],            // 15–16
+    we_dinner:    ["vecere.jpg"],                                // 16–21
+    we_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21–22
+    we_postclose: ["vypln_po_zavreni.jpg"],                      // 22–23
+  };
+
+  // ======== Schedule definice ========
+  // Časy jsou v lokálním čase TV (doporučeno mít TV na Europe/Prague).
+  // day: 0=Ne,1=Po,...6=So
+  const SCHEDULE = {
+    weekday: [
+      { start: "08:00", end: "09:00", key: "wk_preopen"   },
+      { start: "09:00", end: "11:00", key: "wk_breakfast" },
+      { start: "11:00", end: "11:30", key: "wk_between1"  },
+      { start: "11:30", end: "15:00", key: "wk_lunch"     },
+      { start: "15:00", end: "16:00", key: "wk_between2"  },
+      { start: "16:00", end: "21:00", key: "wk_dinner"    },
+      { start: "21:00", end: "22:00", key: "wk_drinks"    },
+      { start: "22:00", end: "23:00", key: "wk_postclose" },
+    ],
+    weekend: [
+      { start: "08:00", end: "09:00", key: "we_preopen"   },
+      { start: "09:00", end: "15:00", key: "we_breakfast" },
+      { start: "15:00", end: "16:00", key: "we_between"   },
+      { start: "16:00", end: "21:00", key: "we_dinner"    },
+      { start: "21:00", end: "22:00", key: "we_drinks"    },
+      { start: "22:00", end: "23:00", key: "we_postclose" },
+    ]
+  };
+
+  // Pokud je mimo 08:00–23:00, co zobrazit:
+  const OUT_OF_HOURS_KEY = "wk_postclose"; // můžeš dát vlastní "noc.jpg"
+
+  // ======== Implementace ========
+  const imgEl = document.getElementById("screen");
+  let currentKey = null;
+  let rotateTimer = null;
+  let indexInPlaylist = 0;
+
+  function parseTimeToMinutes(hhmm) {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  function nowMinutes(d) {
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  function isWeekend(day) {
+    // So(6), Ne(0)
+    return day === 0 || day === 6;
+  }
+
+  function pickScheduleKey(d) {
+    const minutes = nowMinutes(d);
+    const day = d.getDay();
+
+    const table = isWeekend(day) ? SCHEDULE.weekend : SCHEDULE.weekday;
+
+    for (const slot of table) {
+      const s = parseTimeToMinutes(slot.start);
+      const e = parseTimeToMinutes(slot.end);
+      if (minutes >= s && minutes < e) return slot.key;
+    }
+    return OUT_OF_HOURS_KEY;
+  }
+
+  function setImage(filename) {
+    imgEl.classList.add("out");
+    const url = imgUrl(filename);
+    const pre = new Image();
+    pre.onload = () => {
+      imgEl.src = url;
+      requestAnimationFrame(() => imgEl.classList.remove("out"));
+    };
+    pre.onerror = () => {
+      // fallback: nic nezobrazuj, nebo sem dej default
+      console.warn("Image failed to load:", url);
+      requestAnimationFrame(() => imgEl.classList.remove("out"));
+    };
+    pre.src = url;
+  }
+
+  function startRotationFor(key) {
+    const list = PLAYLISTS[key] || [];
+    if (!list.length) {
+      console.warn("Empty playlist for key:", key);
+      return;
+    }
+
+    // zresetuj rotaci
+    indexInPlaylist = 0;
+    setImage(list[indexInPlaylist]);
+
+    if (rotateTimer) clearInterval(rotateTimer);
+    if (list.length > 1) {
+      rotateTimer = setInterval(() => {
+        indexInPlaylist = (indexInPlaylist + 1) % list.length;
+        setImage(list[indexInPlaylist]);
+      }, ROTATE_EVERY_MS);
+    } else {
+      rotateTimer = null;
+    }
+  }
+
+  function tick() {
+    const d = new Date();
+    const key = pickScheduleKey(d);
+    if (key !== currentKey) {
+      currentKey = key;
+      startRotationFor(currentKey);
+    }
+  }
+
+  // Start
+  tick();
+  setInterval(tick, 15 * 1000); // přepočet schedule každých 15s
+  setTimeout(() => location.reload(), HARD_REFRESH_EVERY_MS); // hard refresh
+
+})();
+</script>
+</body>
+</html>
