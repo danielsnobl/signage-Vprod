@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Správa menu</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f4f4f5;
+      margin: 0;
+      padding: 1rem;
+      color: #18181b;
+    }
+
+    /* ── Login ── */
+    #login-screen {
+      max-width: 400px;
+      margin: 5rem auto;
+      background: #fff;
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,.09);
+    }
+    #login-screen h1 {
+      font-size: 1.2rem;
+      margin: 0 0 .4rem;
+    }
+    #login-screen p {
+      font-size: .85rem;
+      color: #71717a;
+      margin: 0 0 1.25rem;
+    }
+    #login-screen a { color: #2563eb; }
+
+    .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .85rem; }
+    .field label { font-size: .8rem; font-weight: 600; color: #52525b; }
+    .field input {
+      padding: .6rem .75rem;
+      border: 1px solid #d4d4d8;
+      border-radius: 8px;
+      font-size: .95rem;
+      width: 100%;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+
+    .error-msg {
+      font-size: .82rem;
+      color: #dc2626;
+      margin: -.4rem 0 .7rem;
+      display: none;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      padding: .55rem 1.1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary  { background: #2563eb; color: #fff; }
+    .btn-primary:hover:not(:disabled)  { background: #1d4ed8; }
+    .btn-ghost    { background: #e4e4e7; color: #3f3f46; }
+    .btn-ghost:hover:not(:disabled)    { background: #d4d4d8; }
+    .btn-full { width: 100%; }
+
+    /* ── App layout ── */
+    #app { max-width: 860px; margin: 0 auto; display: none; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
+    .topbar h1 { font-size: 1.15rem; margin: 0; }
+
+    /* ── Cards grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-thumb {
+      aspect-ratio: 16/9;
+      background: #18181b;
+      overflow: hidden;
+    }
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .card-body {
+      padding: .85rem;
+      display: flex;
+      flex-direction: column;
+      gap: .55rem;
+      flex: 1;
+    }
+    .card-label {
+      font-size: .9rem;
+      font-weight: 600;
+    }
+    .card-filename {
+      font-size: .72rem;
+      color: #a1a1aa;
+      font-family: monospace;
+    }
+
+    /* progress bar */
+    .progress-wrap {
+      height: 4px;
+      background: #e4e4e7;
+      border-radius: 2px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #2563eb;
+      width: 0;
+      transition: width .2s;
+    }
+
+    /* file input overlay */
+    .upload-wrap { position: relative; }
+    .upload-wrap input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: .75rem 1.2rem;
+      border-radius: 10px;
+      font-size: .875rem;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      opacity: 0;
+      transform: translateY(.75rem);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      z-index: 9999;
+      max-width: 320px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.ok  { background: #16a34a; }
+    #toast.err { background: #dc2626; }
+
+    #status-bar {
+      font-size: .8rem;
+      color: #71717a;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <h1>Správa menu obrázků</h1>
+  <p>
+    Zadej svůj GitHub Personal Access Token (PAT) s oprávněním <code>repo</code>.<br>
+    Token se uloží pouze do prohlížeče a nikam neodesílá.
+    <a href="https://github.com/settings/tokens/new?scopes=repo&description=Menu+admin" target="_blank" rel="noopener">Vytvořit token →</a>
+  </p>
+  <div class="field">
+    <label for="pat-input">Personal Access Token</label>
+    <input id="pat-input" type="password" placeholder="ghp_..." autocomplete="off" spellcheck="false" />
+  </div>
+  <p id="login-error" class="error-msg"></p>
+  <button class="btn btn-primary btn-full" id="login-btn">Přihlásit se</button>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <div class="topbar">
+    <h1>Správa menu obrázků</h1>
+    <button class="btn btn-ghost" id="logout-btn">Odhlásit</button>
+  </div>
+  <p id="status-bar"></p>
+  <div id="grid" class="grid"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  Konfigurace repozitáře
+// ─────────────────────────────────────────────
+const REPO_OWNER  = "danielsnobl";
+const REPO_NAME   = "signage-Vprod";
+const REPO_BRANCH = "main";
+const ASSETS_PATH = "assets";
+
+// ─────────────────────────────────────────────
+//  Mapování názvů souborů → lidské popisky
+// ─────────────────────────────────────────────
+const LABELS = {
+  "snidane.jpg":                          "Snídaňové menu (všední dny)",
+  "snidane_vikend.jpg":                   "Snídaňové menu (víkend)",
+  "obed_tydne.jpg":                       "Obědové menu týdne",
+  "vecere.jpg":                           "Večerní menu",
+  "napoje_a_oteviraci_doba_kuchyne.jpg":  "Nápojový lístek + otevírací doba kuchyně",
+  "Ranni Menu Bez Jidla (1).jpg":         "Ranní nápojový lístek (bez jídla)",
+  "Oteviraci Doba Kuchyne.jpg":           "Otevírací doba kuchyně",
+  "vypln_pred_otevrenim.jpg":             "Výplň — před otevřením (8–9 h)",
+  "vypln_mezi_snidani_a_obedem.jpg":      "Výplň — mezi snídaní a obědem (11–11:30 h)",
+  "vypln_mezi_obedem_a_veceri.jpg":       "Výplň — mezi obědem a večeří (15–16 h)",
+  "vypln_po_zavreni.jpg":                 "Výplň — po zavření (22–23 h + noční klid)",
+};
+
+const TOKEN_KEY = "menu_github_pat";
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
+// ─────────────────────────────────────────────
+//  Helpers
+// ─────────────────────────────────────────────
+const $ = (sel) => document.querySelector(sel);
+
+function toast(msg, type = "ok") {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 3500);
+}
+
+function setStatus(msg) {
+  $("#status-bar").textContent = msg;
+}
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || "";
+}
+
+function apiHeaders(token) {
+  return {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+}
+
+// ─────────────────────────────────────────────
+//  Auth
+// ─────────────────────────────────────────────
+async function verifyToken(token) {
+  const res = await fetch("https://api.github.com/user", {
+    headers: apiHeaders(token),
+  });
+  return res.ok;
+}
+
+async function doLogin() {
+  const token = $("#pat-input").value.trim();
+  const errEl = $("#login-error");
+  const btn   = $("#login-btn");
+
+  errEl.style.display = "none";
+  if (!token) {
+    errEl.textContent = "Zadej Personal Access Token.";
+    errEl.style.display = "block";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Ověřuji token…";
+
+  const valid = await verifyToken(token).catch(() => false);
+  if (!valid) {
+    errEl.textContent = "Token je neplatný nebo nemá oprávnění repo. Zkus znovu.";
+    errEl.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Přihlásit se";
+    return;
+  }
+
+  localStorage.setItem(TOKEN_KEY, token);
+  showApp();
+}
+
+function doLogout() {
+  localStorage.removeItem(TOKEN_KEY);
+  location.reload();
+}
+
+// ─────────────────────────────────────────────
+//  App init
+// ─────────────────────────────────────────────
+function showApp() {
+  $("#login-screen").style.display = "none";
+  $("#app").style.display = "block";
+  loadImages();
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (getToken()) {
+    showApp();
+  }
+
+  $("#login-btn").addEventListener("click", doLogin);
+  $("#pat-input").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+  $("#logout-btn").addEventListener("click", doLogout);
+});
+
+// ─────────────────────────────────────────────
+//  Load images from GitHub API
+// ─────────────────────────────────────────────
+async function loadImages() {
+  setStatus("Načítám seznam obrázků…");
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${ASSETS_PATH}?ref=${REPO_BRANCH}`;
+
+  const res = await fetch(url, { headers: apiHeaders(getToken()) }).catch(() => null);
+  if (!res || !res.ok) {
+    setStatus("Chyba při načítání. Zkontroluj připojení nebo oprávnění tokenu.");
+    return;
+  }
+
+  const items = await res.json();
+  const jpgs  = items.filter((f) => /\.(jpg|jpeg)$/i.test(f.name));
+
+  // Sort: known files first (in LABELS order), then the rest alphabetically
+  const order = Object.keys(LABELS);
+  jpgs.sort((a, b) => {
+    const ai = order.indexOf(a.name);
+    const bi = order.indexOf(b.name);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return  1;
+    return a.name.localeCompare(b.name, "cs");
+  });
+
+  setStatus(`${jpgs.length} obrázků v repozitáři`);
+  renderGrid(jpgs);
+}
+
+// ─────────────────────────────────────────────
+//  Render grid
+// ─────────────────────────────────────────────
+function renderGrid(files) {
+  const grid = $("#grid");
+  grid.innerHTML = "";
+
+  files.forEach((file) => {
+    const label    = LABELS[file.name] || file.name;
+    // download_url is a direct CDN link — fast for thumbnails
+    const thumbSrc = file.download_url + "?t=" + Date.now();
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.filename = file.name;
+    card.dataset.sha      = file.sha;
+
+    card.innerHTML = `
+      <div class="card-thumb">
+        <img src="${thumbSrc}" alt="${label}" loading="lazy" />
+      </div>
+      <div class="card-body">
+        <div class="card-label">${label}</div>
+        <div class="card-filename">${file.name}</div>
+        <div class="progress-wrap"><div class="progress-bar"></div></div>
+        <div class="upload-wrap">
+          <input type="file" accept=".jpg,.jpeg,image/jpeg" aria-label="Nahrát nový obrázek pro: ${label}" />
+          <button class="btn btn-primary" style="width:100%">Nahrát nový JPG</button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector("input[type=file]").addEventListener("change", (e) => handleUpload(e, card));
+    grid.appendChild(card);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  Upload via GitHub Contents API
+// ─────────────────────────────────────────────
+async function handleUpload(event, card) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate MIME and extension
+  if (!file.type.match(/^image\/jpe?g$/i) || !/\.(jpg|jpeg)$/i.test(file.name)) {
+    toast("Povoleny jsou pouze JPG soubory.", "err");
+    event.target.value = "";
+    return;
+  }
+
+  if (file.size > MAX_BYTES) {
+    toast("Soubor je příliš velký (max 5 MB).", "err");
+    event.target.value = "";
+    return;
+  }
+
+  const filename    = card.dataset.filename;
+  const currentSha  = card.dataset.sha;
+  const progressWrap = card.querySelector(".progress-wrap");
+  const progressBar  = card.querySelector(".progress-bar");
+  const uploadBtn    = card.querySelector(".btn");
+
+  uploadBtn.disabled = true;
+  progressWrap.style.display = "block";
+  progressBar.style.width = "20%";
+
+  try {
+    // Read file as base64
+    const base64 = await fileToBase64(file);
+    progressBar.style.width = "50%";
+
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${ASSETS_PATH}/${encodeURIComponent(filename)}`;
+
+    const body = {
+      message: `Aktualizace obrázku: ${filename}`,
+      content: base64,
+      branch:  REPO_BRANCH,
+      sha:     currentSha, // required to update existing file
+    };
+
+    const res = await fetch(apiUrl, {
+      method:  "PUT",
+      headers: { ...apiHeaders(getToken()), "Content-Type": "application/json" },
+      body:    JSON.stringify(body),
+    });
+
+    progressBar.style.width = "100%";
+
+    if (res.ok) {
+      const data = await res.json();
+      // Update SHA so next upload on same card works without reload
+      card.dataset.sha = data.content.sha;
+
+      // Refresh thumbnail
+      const img = card.querySelector("img");
+      img.src = data.content.download_url + "?t=" + Date.now();
+
+      toast(`✓ ${filename} byl úspěšně nahrán a commitnut.`);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      toast(`Chyba ${res.status}: ${err.message || "Neznámá chyba"}`, "err");
+    }
+  } catch (e) {
+    toast("Síťová chyba při nahrávání.", "err");
+  } finally {
+    setTimeout(() => {
+      progressWrap.style.display = "none";
+      progressBar.style.width = "0";
+    }, 700);
+    uploadBtn.disabled = false;
+    event.target.value = "";
+  }
+}
+
+// ─────────────────────────────────────────────
+//  File → base64 (without data URI prefix)
+// ─────────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>
