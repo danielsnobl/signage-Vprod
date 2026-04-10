@@ -241,6 +241,133 @@
       color: #4a4f5e;
       margin-bottom: 1.5rem;
     }
+
+    /* ── Promo section ── */
+    .section-divider {
+      border: none;
+      border-top: 1px solid #1f2229;
+      margin: 2.5rem 0 2rem;
+    }
+    .section-heading {
+      font-size: .95rem;
+      font-weight: 700;
+      color: #f1f3f6;
+      margin: 0 0 1.25rem;
+    }
+    .promo-panel {
+      background: #1a1d23;
+      border: 1px solid #2a2d35;
+      border-radius: 10px;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 640px) {
+      .promo-panel { grid-template-columns: 1fr; }
+    }
+    .promo-col { display: flex; flex-direction: column; gap: 1rem; }
+    .promo-col-label {
+      font-size: .75rem;
+      font-weight: 700;
+      color: #7a8190;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .25rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+    .form-row label {
+      font-size: .75rem;
+      font-weight: 600;
+      color: #7a8190;
+    }
+    .form-row input[type=number],
+    .form-row select {
+      padding: .55rem .75rem;
+      border: 1px solid #2a2d35;
+      border-radius: 7px;
+      background: #111317;
+      color: #f1f3f6;
+      font-size: .875rem;
+      width: 100%;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-row input[type=number]:focus,
+    .form-row select:focus {
+      outline: none;
+      border-color: #4f8ef7;
+      box-shadow: 0 0 0 3px rgba(79,142,247,.12);
+    }
+
+    /* toggle switch */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .toggle-row span {
+      font-size: .875rem;
+      font-weight: 600;
+      color: #e8eaf0;
+    }
+    .toggle {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #2a2d35;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle input:checked + .toggle-track { background: #4f8ef7; }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+    /* promo thumb */
+    .promo-thumb-wrap {
+      aspect-ratio: 16/9;
+      background: #0d0f14;
+      border-radius: 7px;
+      overflow: hidden;
+      border: 1px solid #2a2d35;
+    }
+    .promo-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .promo-thumb-wrap .promo-no-img {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      color: #3d4250;
+    }
   </style>
 </head>
 <body>
@@ -265,6 +392,13 @@
   </div>
   <p id="status-bar"></p>
   <div id="grid" class="grid"></div>
+
+  <!-- ── Promo overlay sekce ── -->
+  <hr class="section-divider" />
+  <h2 class="section-heading">Promo overlay</h2>
+  <div id="promo-section">
+    <p style="font-size:.83rem;color:#4a4f5e;">Načítám nastavení…</p>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -275,8 +409,10 @@
 // ─────────────────────────────────────────────
 const REPO_OWNER  = "danielsnobl";
 const REPO_NAME   = "signage-Vprod";
-const REPO_BRANCH = "main";
+const REPO_BRANCH = "feature/promo-overlay";
 const ASSETS_PATH = "assets";
+const CONFIG_PATH = "config.json";
+const INDEX_PATH  = "index.html";
 
 // ─────────────────────────────────────────────
 //  Mapování názvů souborů → lidské popisky
@@ -358,6 +494,12 @@ function apiHeaders(token) {
   };
 }
 
+function generateVersion() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}w${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
 // ─────────────────────────────────────────────
 //  Auth
 // ─────────────────────────────────────────────
@@ -408,6 +550,7 @@ function showApp() {
   $("#login-screen").style.display = "none";
   $("#app").style.display = "block";
   loadImages();
+  loadPromoSection();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -434,7 +577,8 @@ async function loadImages() {
   }
 
   const items = await res.json();
-  const jpgs  = items.filter((f) => /\.(jpg|jpeg)$/i.test(f.name));
+  // Vyfiltruj promo.jpg — ten se spravuje přes promo sekci
+  const jpgs  = items.filter((f) => /\.(jpg|jpeg)$/i.test(f.name) && f.name !== "promo.jpg");
 
   // Sort: playlist files first (in schedule order), inactive files last alphabetically
   jpgs.sort((a, b) => {
@@ -582,6 +726,324 @@ function fileToBase64(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// ─────────────────────────────────────────────
+//  Git Data API — multi-file atomic commit
+//  files = [{ path: "relative/path", content: "utf-8 string" }, ...]
+//  binaryFiles = [{ path: "...", base64: "..." }, ...]
+// ─────────────────────────────────────────────
+async function multiFileCommit(textFiles, binaryFiles, message) {
+  const token = getToken();
+  const headers = { ...apiHeaders(token), "Content-Type": "application/json" };
+  const base = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
+
+  // 1. Aktuální commit SHA
+  const refRes = await fetch(`${base}/git/ref/heads/${encodeURIComponent(REPO_BRANCH)}`, { headers });
+  if (!refRes.ok) throw new Error("Nepodařilo se načíst ref větve.");
+  const commitSha = (await refRes.json()).object.sha;
+
+  // 2. SHA stromu aktuálního commitu
+  const commitRes = await fetch(`${base}/git/commits/${commitSha}`, { headers });
+  if (!commitRes.ok) throw new Error("Nepodařilo se načíst commit.");
+  const treeSha = (await commitRes.json()).tree.sha;
+
+  // 3. Vytvoř bloby — textové soubory (UTF-8 → base64 přes TextEncoder)
+  const blobPromises = [
+    ...textFiles.map(async (f) => {
+      const encoded = btoa(unescape(encodeURIComponent(f.content)));
+      const r = await fetch(`${base}/git/blobs`, {
+        method: "POST", headers,
+        body: JSON.stringify({ content: encoded, encoding: "base64" }),
+      });
+      if (!r.ok) throw new Error(`Nepodařilo se vytvořit blob pro ${f.path}`);
+      return { path: f.path, sha: (await r.json()).sha };
+    }),
+    ...binaryFiles.map(async (f) => {
+      const r = await fetch(`${base}/git/blobs`, {
+        method: "POST", headers,
+        body: JSON.stringify({ content: f.base64, encoding: "base64" }),
+      });
+      if (!r.ok) throw new Error(`Nepodařilo se vytvořit blob pro ${f.path}`);
+      return { path: f.path, sha: (await r.json()).sha };
+    }),
+  ];
+  const blobs = await Promise.all(blobPromises);
+
+  // 4. Nový strom
+  const treeRes = await fetch(`${base}/git/trees`, {
+    method: "POST", headers,
+    body: JSON.stringify({
+      base_tree: treeSha,
+      tree: blobs.map((b) => ({ path: b.path, mode: "100644", type: "blob", sha: b.sha })),
+    }),
+  });
+  if (!treeRes.ok) throw new Error("Nepodařilo se vytvořit strom.");
+  const newTreeSha = (await treeRes.json()).sha;
+
+  // 5. Nový commit
+  const newCommitRes = await fetch(`${base}/git/commits`, {
+    method: "POST", headers,
+    body: JSON.stringify({ message, tree: newTreeSha, parents: [commitSha] }),
+  });
+  if (!newCommitRes.ok) throw new Error("Nepodařilo se vytvořit commit.");
+  const newCommitSha = (await newCommitRes.json()).sha;
+
+  // 6. Aktualizuj ref
+  const updateRes = await fetch(`${base}/git/refs/heads/${encodeURIComponent(REPO_BRANCH)}`, {
+    method: "PATCH", headers,
+    body: JSON.stringify({ sha: newCommitSha }),
+  });
+  if (!updateRes.ok) throw new Error("Nepodařilo se aktualizovat ref.");
+
+  return newCommitSha;
+}
+
+// ─────────────────────────────────────────────
+//  Načti index.html obsah z GitHub API
+// ─────────────────────────────────────────────
+async function fetchIndexHtml() {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${INDEX_PATH}?ref=${REPO_BRANCH}`;
+  const res = await fetch(url, { headers: apiHeaders(getToken()) });
+  if (!res.ok) throw new Error("Nepodařilo se načíst index.html");
+  const data = await res.json();
+  return atob(data.content.replace(/\s/g, ""));
+}
+
+function bumpVersion(indexContent) {
+  return indexContent.replace(
+    /const VERSION = "[^"]*"/,
+    `const VERSION = "${generateVersion()}"`
+  );
+}
+
+// ─────────────────────────────────────────────
+//  Promo sekce — načtení
+// ─────────────────────────────────────────────
+// Stav promo sekce (SHA souborů pro případný update)
+let promoState = { configSha: null, promoImgSha: null, promoImgUrl: null };
+
+async function loadPromoSection() {
+  const section = $("#promo-section");
+
+  try {
+    const base = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
+    const headers = apiHeaders(getToken());
+
+    // Načti config.json a promo.jpg paralelně
+    const [cfgRes, imgRes] = await Promise.all([
+      fetch(`${base}/${CONFIG_PATH}?ref=${REPO_BRANCH}`, { headers }),
+      fetch(`${base}/${ASSETS_PATH}/promo.jpg?ref=${REPO_BRANCH}`, { headers }),
+    ]);
+
+    let cfg = { promoEnabled: true, promoIntervalMinutes: 5, promoDurationSeconds: 10, promoTransition: "none" };
+    if (cfgRes.ok) {
+      const cfgData = await cfgRes.json();
+      promoState.configSha = cfgData.sha;
+      cfg = JSON.parse(atob(cfgData.content.replace(/\s/g, "")));
+    }
+
+    if (imgRes.ok) {
+      const imgData = await imgRes.json();
+      promoState.promoImgSha = imgData.sha;
+      promoState.promoImgUrl = imgData.download_url;
+    }
+
+    renderPromoSection(cfg);
+  } catch (e) {
+    section.innerHTML = `<p style="font-size:.83rem;color:#f47070;">Chyba při načítání promo nastavení.</p>`;
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Promo sekce — render
+// ─────────────────────────────────────────────
+function renderPromoSection(cfg) {
+  const section = $("#promo-section");
+
+  const thumbHtml = promoState.promoImgUrl
+    ? `<img src="${promoState.promoImgUrl}?t=${Date.now()}" alt="Promo obrázek" loading="lazy" />`
+    : `<div class="promo-no-img">Žádný obrázek</div>`;
+
+  section.innerHTML = `
+    <div class="promo-panel">
+      <div class="promo-col">
+        <div class="promo-col-label">Nastavení</div>
+
+        <div class="toggle-row">
+          <span>Zapnout promo overlay</span>
+          <label class="toggle">
+            <input type="checkbox" id="promo-enabled" ${cfg.promoEnabled ? "checked" : ""} />
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label for="promo-interval">Interval zobrazení (minuty)</label>
+          <input type="number" id="promo-interval" min="1" max="999" value="${cfg.promoIntervalMinutes ?? 5}" />
+        </div>
+
+        <div class="form-row">
+          <label for="promo-duration">Doba zobrazení (sekundy)</label>
+          <input type="number" id="promo-duration" min="1" max="300" value="${cfg.promoDurationSeconds ?? 10}" />
+        </div>
+
+        <div class="form-row">
+          <label for="promo-transition">Typ přechodu</label>
+          <select id="promo-transition">
+            <option value="none"  ${(cfg.promoTransition ?? "none") === "none"  ? "selected" : ""}>Ostrý (bez přechodu)</option>
+            <option value="fade"  ${(cfg.promoTransition ?? "none") === "fade"  ? "selected" : ""}>Plynulé prolnutí</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="promo-save-btn">Uložit nastavení</button>
+        <div class="progress-wrap" id="promo-save-progress"><div class="progress-bar"></div></div>
+      </div>
+
+      <div class="promo-col">
+        <div class="promo-col-label">Promo obrázek (promo.jpg)</div>
+        <div class="promo-thumb-wrap">${thumbHtml}</div>
+        <div class="progress-wrap" id="promo-upload-progress"><div class="progress-bar"></div></div>
+        <div class="upload-wrap">
+          <input type="file" id="promo-file-input" accept=".jpg,.jpeg,image/jpeg" aria-label="Nahrát promo obrázek" />
+          <button class="btn btn-primary btn-full">Nahrát nový promo JPG</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $("#promo-save-btn").addEventListener("click", savePromoConfig);
+  $("#promo-file-input").addEventListener("change", handlePromoUpload);
+}
+
+// ─────────────────────────────────────────────
+//  Promo — uložení nastavení (config.json + VERSION bump)
+// ─────────────────────────────────────────────
+async function savePromoConfig() {
+  const saveBtn      = $("#promo-save-btn");
+  const progressWrap = $("#promo-save-progress");
+  const progressBar  = progressWrap.querySelector(".progress-bar");
+
+  const newCfg = {
+    promoEnabled:           $("#promo-enabled").checked,
+    promoIntervalMinutes:   Number($("#promo-interval").value),
+    promoDurationSeconds:   Number($("#promo-duration").value),
+    promoTransition:        $("#promo-transition").value,
+  };
+
+  saveBtn.disabled = true;
+  progressWrap.style.display = "block";
+  progressBar.style.width = "20%";
+
+  try {
+    const indexContent = await fetchIndexHtml();
+    progressBar.style.width = "50%";
+
+    const newVersion = generateVersion();
+    const updatedIndex = bumpVersion(indexContent);
+    const updatedConfig = JSON.stringify(newCfg, null, 2) + "\n";
+
+    progressBar.style.width = "70%";
+
+    await multiFileCommit(
+      [
+        { path: CONFIG_PATH, content: updatedConfig },
+        { path: INDEX_PATH,  content: updatedIndex  },
+      ],
+      [],
+      `Promo nastavení: interval ${newCfg.promoIntervalMinutes} min, zobrazení ${newCfg.promoDurationSeconds} s, verze ${newVersion}`
+    );
+
+    progressBar.style.width = "100%";
+    // Aktualizuj SHA configu (pro případný další save bez reloadu)
+    const cfgRes = await fetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${CONFIG_PATH}?ref=${REPO_BRANCH}`,
+      { headers: apiHeaders(getToken()) }
+    );
+    if (cfgRes.ok) promoState.configSha = (await cfgRes.json()).sha;
+
+    toast("✓ Nastavení uloženo a VERSION aktualizována.");
+  } catch (e) {
+    toast(`Chyba: ${e.message}`, "err");
+  } finally {
+    setTimeout(() => {
+      progressWrap.style.display = "none";
+      progressBar.style.width = "0";
+    }, 700);
+    saveBtn.disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Promo — nahrání promo.jpg (binárně) + VERSION bump
+// ─────────────────────────────────────────────
+async function handlePromoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.match(/^image\/jpe?g$/i) || !/\.(jpg|jpeg)$/i.test(file.name)) {
+    toast("Povoleny jsou pouze JPG soubory.", "err");
+    event.target.value = "";
+    return;
+  }
+
+  if (file.size > MAX_BYTES) {
+    toast("Soubor je příliš velký (max 5 MB).", "err");
+    event.target.value = "";
+    return;
+  }
+
+  const progressWrap = $("#promo-upload-progress");
+  const progressBar  = progressWrap.querySelector(".progress-bar");
+  const uploadBtn    = event.target.closest(".upload-wrap").querySelector(".btn");
+
+  uploadBtn.disabled = true;
+  progressWrap.style.display = "block";
+  progressBar.style.width = "20%";
+
+  try {
+    const base64 = await fileToBase64(file);
+    progressBar.style.width = "40%";
+
+    const indexContent = await fetchIndexHtml();
+    progressBar.style.width = "60%";
+
+    const newVersion   = generateVersion();
+    const updatedIndex = bumpVersion(indexContent);
+
+    await multiFileCommit(
+      [{ path: INDEX_PATH, content: updatedIndex }],
+      [{ path: `${ASSETS_PATH}/promo.jpg`, base64 }],
+      `Nahrán nový promo obrázek, verze ${newVersion}`
+    );
+
+    progressBar.style.width = "100%";
+
+    // Obnov SHA promo.jpg a náhled
+    const imgRes = await fetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${ASSETS_PATH}/promo.jpg?ref=${REPO_BRANCH}`,
+      { headers: apiHeaders(getToken()) }
+    );
+    if (imgRes.ok) {
+      const imgData = await imgRes.json();
+      promoState.promoImgSha = imgData.sha;
+      promoState.promoImgUrl = imgData.download_url;
+      const thumbImg = $(".promo-thumb-wrap img");
+      if (thumbImg) thumbImg.src = imgData.download_url + "?t=" + Date.now();
+    }
+
+    toast("✓ promo.jpg nahrán a VERSION aktualizována.");
+  } catch (e) {
+    toast(`Chyba: ${e.message}`, "err");
+  } finally {
+    setTimeout(() => {
+      progressWrap.style.display = "none";
+      progressBar.style.width = "0";
+    }, 700);
+    uploadBtn.disabled = false;
+    event.target.value = "";
+  }
 }
 </script>
 <div style="position:fixed;bottom:10px;left:10px;font-size:11px;color:#a1a1aa;pointer-events:none;font-family:system-ui,sans-serif;">Technické řešení: Daniel Šnobl</div>

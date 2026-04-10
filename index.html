@@ -22,12 +22,28 @@
     /* jemný fade při přepnutí */
     .fade { transition: opacity 350ms ease; opacity: 1; }
     .fade.out { opacity: 0; }
+
+    /* ── Promo overlay ── */
+    #promo {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      background: #000;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #promo.promo-fade     { transition: opacity 350ms ease; }
+    #promo.promo-visible  { opacity: 1; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <img id="screen" class="fade" alt="Menu" />
   </div>
+  <img id="promo" alt="Promo" />
 
 <script>
 (() => {
@@ -184,6 +200,49 @@
   tick();
   setInterval(tick, 15 * 1000); // přepočet schedule každých 15s
   setTimeout(() => location.reload(), HARD_REFRESH_EVERY_MS); // hard refresh
+
+  // ======== Promo overlay ========
+  const promoEl = document.getElementById("promo");
+  let promoReady = false;
+
+  async function initPromo() {
+    // Načti config — pokud selže nebo neexistuje, použij výchozí hodnoty
+    let cfg = {};
+    try {
+      const res = await fetch("./config.json?v=" + encodeURIComponent(VERSION));
+      if (res.ok) cfg = await res.json();
+    } catch (_) { /* tiše pokračuj s výchozími hodnotami */ }
+
+    const enabled      = cfg.promoEnabled !== false;
+    const intervalMs   = ((cfg.promoIntervalMinutes ?? 5)) * 60 * 1000;
+    const durationMs   = ((cfg.promoDurationSeconds ?? 10)) * 1000;
+    const useFade      = cfg.promoTransition === "fade";
+
+    if (!enabled) return;
+
+    // Preload promo.jpg — pokud neexistuje, tiše přeskočíme
+    const src = imgUrl("promo.jpg");
+    const pre = new Image();
+    pre.onload = () => {
+      promoEl.src = src;
+      if (useFade) promoEl.classList.add("promo-fade");
+      promoReady = true;
+      // První zobrazení až po prvním celém intervalu
+      setInterval(() => showPromo(durationMs), intervalMs);
+    };
+    pre.onerror = () => {
+      // promo.jpg neexistuje — nic se nestane
+    };
+    pre.src = src;
+  }
+
+  function showPromo(durationMs) {
+    if (!promoReady) return;
+    promoEl.classList.add("promo-visible");
+    setTimeout(() => promoEl.classList.remove("promo-visible"), durationMs);
+  }
+
+  initPromo();
 
 })();
 </script>
