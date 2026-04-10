@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Menu Display</title>
 
-  <!-- PomÅ¯Å¾e proti nÄkterÃ½m cache problÃ©mÅ¯m v prohlÃ­Å¾eÄÃ­ch -->
+  <!-- PomÃÂ¯ÃÂ¾e proti nÃÂkterÃÂ½m cache problÃÂ©mÃÂ¯m v prohlÃÂ­ÃÂ¾eÃÂÃÂ­ch -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -16,14 +16,14 @@
     img {
       width: 100vw;
       height: 100vh;
-      object-fit: contain; /* zmÄÅ na cover, pokud chceÅ¡ oÅez pÅes celou TV */
+      object-fit: contain; /* zmÃÂÃÂ na cover, pokud chceÃÂ¡ oÃÂez pÃÂes celou TV */
       background: #000;
     }
-    /* jemnÃ½ fade pÅi pÅepnutÃ­ */
+    /* jemnÃÂ½ fade pÃÂi pÃÂepnutÃÂ­ */
     .fade { transition: opacity 350ms ease; opacity: 1; }
     .fade.out { opacity: 0; }
 
-    /* ââ Promo overlay ââ */
+    /* Ã¢ÂÂÃ¢ÂÂ Promo overlay Ã¢ÂÂÃ¢ÂÂ */
     #promo {
       position: fixed;
       inset: 0;
@@ -47,49 +47,49 @@
 
 <script>
 (() => {
-  // ======== DÅ®LEÅ½ITÃ: zmÄÅ 1Ã tÃ½dnÄ (kvÅ¯li cache na TV) ========
-  // NapÅ. "2026w07", "2026-02-16", cokoliv
-  const VERSION = "2026w04101938";
+  // ======== DÃÂ®LEÃÂ½ITÃÂ: zmÃÂÃÂ 1ÃÂ tÃÂ½dnÃÂ (kvÃÂ¯li cache na TV) ========
+  // NapÃÂ. "2026w07", "2026-02-16", cokoliv
+  const VERSION = "2026w04101943";
 
-  // ======== NastavenÃ­ rotace v rÃ¡mci bloku (kdyÅ¾ mÃ¡Å¡ vÃ­c JPG) ========
+  // ======== NastavenÃÂ­ rotace v rÃÂ¡mci bloku (kdyÃÂ¾ mÃÂ¡ÃÂ¡ vÃÂ­c JPG) ========
   const ROTATE_EVERY_MS = 15000; // 15s
 
-  // ======== Auto-refresh strÃ¡nky (TV prohlÃ­Å¾eÄe se obÄas unavÃ­) ========
+  // ======== Auto-refresh strÃÂ¡nky (TV prohlÃÂ­ÃÂ¾eÃÂe se obÃÂas unavÃÂ­) ========
   const HARD_REFRESH_EVERY_MS = 4 * 60 * 60 * 1000; // 4 hodiny
 
-  // ======== Cesta k obrÃ¡zkÅ¯m ========
+  // ======== Cesta k obrÃÂ¡zkÃÂ¯m ========
   const ASSET_BASE = "./assets/";
 
-  // PomocnÃ¡ funkce: vytvoÅÃ­ URL s cache-bust parametrem
+  // PomocnÃÂ¡ funkce: vytvoÃÂÃÂ­ URL s cache-bust parametrem
   function imgUrl(filename) {
     const sep = filename.includes("?") ? "&" : "?";
     return ASSET_BASE + filename + sep + "v=" + encodeURIComponent(VERSION);
   }
 
-  // ======== Tvoje playlisty (doplÅ soubory) ========
-  // Do kaÅ¾dÃ©ho bloku mÅ¯Å¾eÅ¡ dÃ¡t 1 nebo vÃ­ce JPG (budou se stÅÃ­dat).
+  // ======== Tvoje playlisty (doplÃÂ soubory) ========
+  // Do kaÃÂ¾dÃÂ©ho bloku mÃÂ¯ÃÂ¾eÃÂ¡ dÃÂ¡t 1 nebo vÃÂ­ce JPG (budou se stÃÂÃÂ­dat).
   const PLAYLISTS = {
-    // POâPÃ
-    wk_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8â9
-    wk_breakfast: ["snidane.jpg"],                               // 9â11
-    wk_between1:  ["vypln_mezi_snidani_a_obedem.jpg"],           // 11â11:30
-    wk_lunch:     ["obed_tydne.jpg"],                            // 11:30â15 (tÃ½dnÄ mÄnÃ­Å¡)
-    wk_between2:  ["vypln_mezi_obedem_a_veceri.jpg"],            // 15â16
-    wk_dinner:    ["vecere.jpg"],                                // 16â21
-    wk_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21â22
-    wk_postclose: ["vypln_po_zavreni.jpg"],                      // 22â23
+    // POÃ¢ÂÂPÃÂ
+    wk_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8Ã¢ÂÂ9
+    wk_breakfast: ["snidane.jpg"],                               // 9Ã¢ÂÂ11
+    wk_between1:  ["vypln_mezi_snidani_a_obedem.jpg"],           // 11Ã¢ÂÂ11:30
+    wk_lunch:     ["obed_tydne.jpg"],                            // 11:30Ã¢ÂÂ15 (tÃÂ½dnÃÂ mÃÂnÃÂ­ÃÂ¡)
+    wk_between2:  ["vypln_mezi_obedem_a_veceri.jpg"],            // 15Ã¢ÂÂ16
+    wk_dinner:    ["vecere.jpg"],                                // 16Ã¢ÂÂ21
+    wk_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21Ã¢ÂÂ22
+    wk_postclose: ["vypln_po_zavreni.jpg"],                      // 22Ã¢ÂÂ23
 
-    // SOâNE
-    we_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8â9
-    we_breakfast: ["snidane_vikend.jpg"],                        // 9â15
-    we_between:   ["vypln_mezi_obedem_a_veceri.jpg"],            // 15â16
-    we_dinner:    ["vecere.jpg"],                                // 16â21
-    we_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21â22
-    we_postclose: ["vypln_po_zavreni.jpg"],                      // 22â23
+    // SOÃ¢ÂÂNE
+    we_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8Ã¢ÂÂ9
+    we_breakfast: ["snidane_vikend.jpg"],                        // 9Ã¢ÂÂ15
+    we_between:   ["vypln_mezi_obedem_a_veceri.jpg"],            // 15Ã¢ÂÂ16
+    we_dinner:    ["vecere.jpg"],                                // 16Ã¢ÂÂ21
+    we_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21Ã¢ÂÂ22
+    we_postclose: ["vypln_po_zavreni.jpg"],                      // 22Ã¢ÂÂ23
   };
 
   // ======== Schedule definice ========
-  // Äasy jsou v lokÃ¡lnÃ­m Äase TV (doporuÄeno mÃ­t TV na Europe/Prague).
+  // ÃÂasy jsou v lokÃÂ¡lnÃÂ­m ÃÂase TV (doporuÃÂeno mÃÂ­t TV na Europe/Prague).
   // day: 0=Ne,1=Po,...6=So
   const SCHEDULE = {
     weekday: [
@@ -112,8 +112,8 @@
     ]
   };
 
-  // Pokud je mimo 08:00â23:00, co zobrazit:
-  const OUT_OF_HOURS_KEY = "wk_postclose"; // mÅ¯Å¾eÅ¡ dÃ¡t vlastnÃ­ "noc.jpg"
+  // Pokud je mimo 08:00Ã¢ÂÂ23:00, co zobrazit:
+  const OUT_OF_HOURS_KEY = "wk_postclose"; // mÃÂ¯ÃÂ¾eÃÂ¡ dÃÂ¡t vlastnÃÂ­ "noc.jpg"
 
   // ======== Implementace ========
   const imgEl = document.getElementById("screen");
@@ -198,7 +198,7 @@
 
   // Start
   tick();
-  setInterval(tick, 15 * 1000); // pÅepoÄet schedule kaÅ¾dÃ½ch 15s
+  setInterval(tick, 15 * 1000); // pÃÂepoÃÂet schedule kaÃÂ¾dÃÂ½ch 15s
   setTimeout(() => location.reload(), HARD_REFRESH_EVERY_MS); // hard refresh
 
   // ======== Promo overlay ========
@@ -206,12 +206,12 @@
   let promoReady = false;
 
   async function initPromo() {
-    // NaÄti config â pokud selÅ¾e nebo neexistuje, pouÅ¾ij vÃ½chozÃ­ hodnoty
+    // NaÃÂti config Ã¢ÂÂ pokud selÃÂ¾e nebo neexistuje, pouÃÂ¾ij vÃÂ½chozÃÂ­ hodnoty
     let cfg = {};
     try {
       const res = await fetch("./config.json?v=" + encodeURIComponent(VERSION));
       if (res.ok) cfg = await res.json();
-    } catch (_) { /* tiÅ¡e pokraÄuj s vÃ½chozÃ­mi hodnotami */ }
+    } catch (_) { /* tiÃÂ¡e pokraÃÂuj s vÃÂ½chozÃÂ­mi hodnotami */ }
 
     const enabled      = cfg.promoEnabled !== false;
     const intervalMs   = ((cfg.promoIntervalMinutes ?? 5)) * 60 * 1000;
@@ -220,18 +220,18 @@
 
     if (!enabled) return;
 
-    // Preload promo.jpg â pokud neexistuje, tiÅ¡e pÅeskoÄÃ­me
+    // Preload promo.jpg Ã¢ÂÂ pokud neexistuje, tiÃÂ¡e pÃÂeskoÃÂÃÂ­me
     const src = imgUrl("promo.jpg");
     const pre = new Image();
     pre.onload = () => {
       promoEl.src = src;
       if (useFade) promoEl.classList.add("promo-fade");
       promoReady = true;
-      // PrvnÃ­ zobrazenÃ­ aÅ¾ po prvnÃ­m celÃ©m intervalu
+      // PrvnÃÂ­ zobrazenÃÂ­ aÃÂ¾ po prvnÃÂ­m celÃÂ©m intervalu
       setInterval(() => showPromo(durationMs), intervalMs);
     };
     pre.onerror = () => {
-      // promo.jpg neexistuje â nic se nestane
+      // promo.jpg neexistuje Ã¢ÂÂ nic se nestane
     };
     pre.src = src;
   }
