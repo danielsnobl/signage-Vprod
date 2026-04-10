@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Menu Display</title>
 
-  <!-- Pomůže proti některým cache problémům v prohlížečích -->
+  <!-- PomÅ¯Å¾e proti nÄkterÃ½m cache problÃ©mÅ¯m v prohlÃ­Å¾eÄÃ­ch -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -16,14 +16,14 @@
     img {
       width: 100vw;
       height: 100vh;
-      object-fit: contain; /* změň na cover, pokud chceš ořez přes celou TV */
+      object-fit: contain; /* zmÄÅ na cover, pokud chceÅ¡ oÅez pÅes celou TV */
       background: #000;
     }
-    /* jemný fade při přepnutí */
+    /* jemnÃ½ fade pÅi pÅepnutÃ­ */
     .fade { transition: opacity 350ms ease; opacity: 1; }
     .fade.out { opacity: 0; }
 
-    /* ── Promo overlay ── */
+    /* ââ Promo overlay ââ */
     #promo {
       position: fixed;
       inset: 0;
@@ -47,49 +47,49 @@
 
 <script>
 (() => {
-  // ======== DŮLEŽITÉ: změň 1× týdně (kvůli cache na TV) ========
-  // Např. "2026w07", "2026-02-16", cokoliv
-  const VERSION = "2026w1803";
+  // ======== DÅ®LEÅ½ITÃ: zmÄÅ 1Ã tÃ½dnÄ (kvÅ¯li cache na TV) ========
+  // NapÅ. "2026w07", "2026-02-16", cokoliv
+  const VERSION = "2026w04101938";
 
-  // ======== Nastavení rotace v rámci bloku (když máš víc JPG) ========
+  // ======== NastavenÃ­ rotace v rÃ¡mci bloku (kdyÅ¾ mÃ¡Å¡ vÃ­c JPG) ========
   const ROTATE_EVERY_MS = 15000; // 15s
 
-  // ======== Auto-refresh stránky (TV prohlížeče se občas unaví) ========
+  // ======== Auto-refresh strÃ¡nky (TV prohlÃ­Å¾eÄe se obÄas unavÃ­) ========
   const HARD_REFRESH_EVERY_MS = 4 * 60 * 60 * 1000; // 4 hodiny
 
-  // ======== Cesta k obrázkům ========
+  // ======== Cesta k obrÃ¡zkÅ¯m ========
   const ASSET_BASE = "./assets/";
 
-  // Pomocná funkce: vytvoří URL s cache-bust parametrem
+  // PomocnÃ¡ funkce: vytvoÅÃ­ URL s cache-bust parametrem
   function imgUrl(filename) {
     const sep = filename.includes("?") ? "&" : "?";
     return ASSET_BASE + filename + sep + "v=" + encodeURIComponent(VERSION);
   }
 
-  // ======== Tvoje playlisty (doplň soubory) ========
-  // Do každého bloku můžeš dát 1 nebo více JPG (budou se střídat).
+  // ======== Tvoje playlisty (doplÅ soubory) ========
+  // Do kaÅ¾dÃ©ho bloku mÅ¯Å¾eÅ¡ dÃ¡t 1 nebo vÃ­ce JPG (budou se stÅÃ­dat).
   const PLAYLISTS = {
-    // PO–PÁ
-    wk_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8–9
-    wk_breakfast: ["snidane.jpg"],                               // 9–11
-    wk_between1:  ["vypln_mezi_snidani_a_obedem.jpg"],           // 11–11:30
-    wk_lunch:     ["obed_tydne.jpg"],                            // 11:30–15 (týdně měníš)
-    wk_between2:  ["vypln_mezi_obedem_a_veceri.jpg"],            // 15–16
-    wk_dinner:    ["vecere.jpg"],                                // 16–21
-    wk_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21–22
-    wk_postclose: ["vypln_po_zavreni.jpg"],                      // 22–23
+    // POâPÃ
+    wk_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8â9
+    wk_breakfast: ["snidane.jpg"],                               // 9â11
+    wk_between1:  ["vypln_mezi_snidani_a_obedem.jpg"],           // 11â11:30
+    wk_lunch:     ["obed_tydne.jpg"],                            // 11:30â15 (tÃ½dnÄ mÄnÃ­Å¡)
+    wk_between2:  ["vypln_mezi_obedem_a_veceri.jpg"],            // 15â16
+    wk_dinner:    ["vecere.jpg"],                                // 16â21
+    wk_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21â22
+    wk_postclose: ["vypln_po_zavreni.jpg"],                      // 22â23
 
-    // SO–NE
-    we_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8–9
-    we_breakfast: ["snidane_vikend.jpg"],                        // 9–15
-    we_between:   ["vypln_mezi_obedem_a_veceri.jpg"],            // 15–16
-    we_dinner:    ["vecere.jpg"],                                // 16–21
-    we_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21–22
-    we_postclose: ["vypln_po_zavreni.jpg"],                      // 22–23
+    // SOâNE
+    we_preopen:   ["vypln_pred_otevrenim.jpg"],                 // 8â9
+    we_breakfast: ["snidane_vikend.jpg"],                        // 9â15
+    we_between:   ["vypln_mezi_obedem_a_veceri.jpg"],            // 15â16
+    we_dinner:    ["vecere.jpg"],                                // 16â21
+    we_drinks:    ["napoje_a_oteviraci_doba_kuchyne.jpg"],       // 21â22
+    we_postclose: ["vypln_po_zavreni.jpg"],                      // 22â23
   };
 
   // ======== Schedule definice ========
-  // Časy jsou v lokálním čase TV (doporučeno mít TV na Europe/Prague).
+  // Äasy jsou v lokÃ¡lnÃ­m Äase TV (doporuÄeno mÃ­t TV na Europe/Prague).
   // day: 0=Ne,1=Po,...6=So
   const SCHEDULE = {
     weekday: [
@@ -112,8 +112,8 @@
     ]
   };
 
-  // Pokud je mimo 08:00–23:00, co zobrazit:
-  const OUT_OF_HOURS_KEY = "wk_postclose"; // můžeš dát vlastní "noc.jpg"
+  // Pokud je mimo 08:00â23:00, co zobrazit:
+  const OUT_OF_HOURS_KEY = "wk_postclose"; // mÅ¯Å¾eÅ¡ dÃ¡t vlastnÃ­ "noc.jpg"
 
   // ======== Implementace ========
   const imgEl = document.getElementById("screen");
@@ -198,7 +198,7 @@
 
   // Start
   tick();
-  setInterval(tick, 15 * 1000); // přepočet schedule každých 15s
+  setInterval(tick, 15 * 1000); // pÅepoÄet schedule kaÅ¾dÃ½ch 15s
   setTimeout(() => location.reload(), HARD_REFRESH_EVERY_MS); // hard refresh
 
   // ======== Promo overlay ========
@@ -206,12 +206,12 @@
   let promoReady = false;
 
   async function initPromo() {
-    // Načti config — pokud selže nebo neexistuje, použij výchozí hodnoty
+    // NaÄti config â pokud selÅ¾e nebo neexistuje, pouÅ¾ij vÃ½chozÃ­ hodnoty
     let cfg = {};
     try {
       const res = await fetch("./config.json?v=" + encodeURIComponent(VERSION));
       if (res.ok) cfg = await res.json();
-    } catch (_) { /* tiše pokračuj s výchozími hodnotami */ }
+    } catch (_) { /* tiÅ¡e pokraÄuj s vÃ½chozÃ­mi hodnotami */ }
 
     const enabled      = cfg.promoEnabled !== false;
     const intervalMs   = ((cfg.promoIntervalMinutes ?? 5)) * 60 * 1000;
@@ -220,18 +220,18 @@
 
     if (!enabled) return;
 
-    // Preload promo.jpg — pokud neexistuje, tiše přeskočíme
+    // Preload promo.jpg â pokud neexistuje, tiÅ¡e pÅeskoÄÃ­me
     const src = imgUrl("promo.jpg");
     const pre = new Image();
     pre.onload = () => {
       promoEl.src = src;
       if (useFade) promoEl.classList.add("promo-fade");
       promoReady = true;
-      // První zobrazení až po prvním celém intervalu
+      // PrvnÃ­ zobrazenÃ­ aÅ¾ po prvnÃ­m celÃ©m intervalu
       setInterval(() => showPromo(durationMs), intervalMs);
     };
     pre.onerror = () => {
-      // promo.jpg neexistuje — nic se nestane
+      // promo.jpg neexistuje â nic se nestane
     };
     pre.src = src;
   }
