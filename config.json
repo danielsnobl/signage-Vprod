@@ -1,6 +1,6 @@
 {
   "promoEnabled": true,
-  "promoIntervalMinutes": 5,
-  "promoDurationSeconds": 10,
+  "promoIntervalMinutes": 1,
+  "promoDurationSeconds": 4,
   "promoTransition": "none"
 }
