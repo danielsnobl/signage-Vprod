@@ -1,5 +1,5 @@
 {
-  "promoEnabled": true,
+  "promoEnabled": false,
   "promoIntervalMinutes": 1,
   "promoDurationSeconds": 5,
   "promoTransition": "fade"
